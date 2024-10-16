@@ -83,7 +83,7 @@
             return randomComment.trim();
         }
 
-        // Function to convert string literals to ASCII number representation
+        // Function to convert strings to ASCII number representation
         function obfuscateStringLiterals(code) {
             const stringPattern = /(["'])(.*?)\1/g;
             return code.replace(stringPattern, (match, p1, p2) => {
@@ -92,31 +92,29 @@
             });
         }
 
-        // Function to obfuscate 'RenderStepped'
-        function obfuscateRenderStepped(code) {
-            const renderSteppedPattern = /([a-zA-Z_]\w*).RenderStepped/g;
-            return code.replace(renderSteppedPattern, (match, p1) => {
-                // Generate a number instruction format for RenderStepped
-                const asciiName = p1.split('').map(char => char.charCodeAt(0)).join(', ');
-                return `string.char(${asciiName}).RenderStepped`;
+        // Function to obfuscate the "RenderStepped" and other specific method calls
+        function obfuscateSpecialFunctions(code) {
+            const specialPattern = /RenderStepped/g;
+            return code.replace(specialPattern, () => {
+                // Convert "RenderStepped" to ASCII numbers
+                const asciiValues = "RenderStepped".split('').map(char => char.charCodeAt(0)).join(', ');
+                return `string.char(${asciiValues})`;
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, comments, and RenderStepped
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
 
-            // Step 2: Handle RenderStepped Obfuscation
-            obfuscatedCode = obfuscateRenderStepped(obfuscatedCode);
+            // Step 2: Handle special functions like RenderStepped
+            obfuscatedCode = obfuscateSpecialFunctions(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
 
-            // Regex to detect variables that are initialized (not function or service-related)
-            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
-
             // Step 3: Replace each variable name with a random name
+            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
                     nameMappings[p1] = generateRandomName();
