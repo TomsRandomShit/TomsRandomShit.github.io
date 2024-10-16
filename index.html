@@ -61,13 +61,33 @@
     </div>
 
     <script>
+        function generateRandomString(length) {
+            const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * characters.length);
+                result += characters.charAt(randomIndex);
+            }
+            return result;
+        }
+
         function obfuscateCode(code) {
-            // A simple obfuscation example - replace variable names with random strings
-            let obfuscated = code
-                .replace(/(\b\w+\b)/g, (match) => {
-                    return 'var' + Math.floor(Math.random() * 1000);
-                });
-            return obfuscated;
+            const variablePattern = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g; // Matches variable names
+            const stringPattern = /(['"`])(?:(?=(\\?))\2.)*?\1/g; // Matches strings
+
+            let obfuscatedCode = code;
+
+            // Obfuscate variables
+            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match) => {
+                return generateRandomString(5); // Replace variable names with random strings
+            });
+
+            // Obfuscate strings (for demonstration; would be more complex in real scenarios)
+            obfuscatedCode = obfuscatedCode.replace(stringPattern, (match) => {
+                return generateRandomString(8); // Replace strings with random strings
+            });
+
+            return obfuscatedCode;
         }
 
         document.getElementById('obfuscateButton').onclick = function() {
