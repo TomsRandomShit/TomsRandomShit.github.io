@@ -32,27 +32,43 @@
     <textarea id="outputCode" placeholder="Obfuscated code will appear here..." readonly></textarea>
 
     <script>
-        // List of random obfuscating functions and snippets
+        // Function to generate a random function name
+        function generateRandomFunctionName() {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let name = '';
+            for (let i = 0; i < 12; i++) {
+                name += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return name + 'F'; // Adding 'F' at the end for consistency with function names
+        }
+
+        // List of obfuscating functions with placeholder names
         const obfuscatingFunctions = [
-            "function randomFuncA()\n\tlocal a = 0\n\twhile a < 5 do a = a + 1 end\nend\n",
-            "function uselessCalculation()\n\tlocal b = 10 * 3\n\treturn b / 2\nend\n",
-            "function emptyFunction()\n\t-- This function does nothing\nend\n",
+            "function {{RANDOM_NAME}}()\nlocal a = 0\nwhile a < 5 do a = a + 1 end\nend\n",
+            "function {{RANDOM_NAME}}()\nlocal b = 10 * 3\nreturn b / 2\nend\n",
+            "function {{RANDOM_NAME}}()\n-- This function does nothing\nend\n",
             "-- Random comment to confuse\n",
             "local _dummyVar = 42\n",
             "for i = 1, 10 do end\n", // Empty loop
-            "function obfuscator1()\n\tlocal a = 1\n\tif a == 1 then a = a + 1 end\nend\n",
-            "function obfuscator2()\n\tlocal x = 'hidden'\n\treturn x\nend\n",
+            "function {{RANDOM_NAME}}()\nlocal a = 1\nif a == 1 then a = a + 1 end\nend\n",
+            "function {{RANDOM_NAME}}()\nlocal x = 'hidden'\nreturn x\nend\n",
             "-- Misleading comment: TODO: Optimize this\n",
-            "function randomNumberGenerator()\n\treturn math.random(1, 100)\nend\n"
+            "function {{RANDOM_NAME}}()\nreturn math.random(1, 100)\nend\n"
         ];
+
+        // Function to replace placeholder {{RANDOM_NAME}} with actual random names
+        function replaceFunctionNames(code) {
+            return code.replace(/{{RANDOM_NAME}}/g, generateRandomFunctionName());
+        }
 
         // Function to get a random obfuscation snippet
         function getRandomObfuscation() {
             const randomIndex = Math.floor(Math.random() * obfuscatingFunctions.length);
-            return obfuscatingFunctions[randomIndex];
+            let obfuscationCode = obfuscatingFunctions[randomIndex];
+            return replaceFunctionNames(obfuscationCode);
         }
 
-        // Function to obfuscate the user's code
+        // Function to obfuscate the user's code and ensure at least 5 obfuscations
         function obfuscateCode() {
             const inputCode = document.getElementById('inputCode').value;
             
@@ -72,7 +88,7 @@
                 obfuscatedCode.push(codeLines[i]);
 
                 // Randomly decide whether to inject an obfuscation snippet after this line
-                if (Math.random() < 0.5 && currentObfuscations < minObfuscations) { // 50% chance to inject obfuscation
+                if (Math.random() < 0.5 && currentObfuscations < minObfuscations) {
                     obfuscatedCode.push(getRandomObfuscation());
                     currentObfuscations++;
                 }
@@ -86,8 +102,8 @@
                 }
             }
             
-            // Join the array back into a string with line breaks
-            const finalCode = obfuscatedCode.join('\n');
+            // Join the array back into a string and collapse it into a single line (remove new lines and extra spaces)
+            const finalCode = obfuscatedCode.join(' ').replace(/\s+/g, ' ').trim();
             
             // Output the obfuscated code
             document.getElementById('outputCode').value = finalCode;
