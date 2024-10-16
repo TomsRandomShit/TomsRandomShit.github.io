@@ -153,19 +153,25 @@
                 return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
             });
 
-            // Step 7: Replace event connection anonymous functions
-            const connectPattern = /:\s*Connect\s*\((function\s*\(\s*\))?\s*(function\s*\(.*?\)\s*end)\s*\)/g;
-            obfuscatedCode = obfuscatedCode.replace(connectPattern, (match, funcHeader, funcBody) => {
-                const newFuncName = generateRandomName();
-                return `:Connect(function ${newFuncName}() ${funcBody}`;
-            });
-
-            // Step 8: Replace any references to loop variables elsewhere
+            // Step 7: Replace any references to loop variables elsewhere
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
+
+            // Step 8: Obfuscate event connections
+            const eventConnectionPattern = /(\w+)\.(\w+):Connect\(function\s*\((.*?)\)\s*end/g;
+
+            obfuscatedCode = obfuscatedCode.replace(eventConnectionPattern, (match, obj, event, params) => {
+                // Generate a random function name for the connected function
+                const randomFunctionName = generateRandomName();
+                const obfuscatedParams = params.split(',').map(param => {
+                    return `string.char(${param.split('').map(char => char.charCodeAt(0)).join(', ')})`;
+                }).join(', '); // Convert parameters to string.char(...)
+
+                return `${obj}.${event}:Connect(function(${obfuscatedParams}) end)`;
+            });
 
             return obfuscatedCode;
         }
