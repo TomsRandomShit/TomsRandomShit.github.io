@@ -72,7 +72,18 @@
             return randomName;
         }
 
-        // Function to obfuscate LuaU code by renaming variables
+        // Function to generate a random comment replacement
+        function generateRandomWords() {
+            const randomWords = ["book", "fish", "dictionary", "bee", "apple", "sun", "pencil", "flower", "cloud", "window"];
+            let wordCount = Math.floor(Math.random() * 4) + 2; // Random word count between 2 and 5
+            let randomComment = "";
+            for (let i = 0; i < wordCount; i++) {
+                randomComment += randomWords[Math.floor(Math.random() * randomWords.length)] + " ";
+            }
+            return randomComment.trim();
+        }
+
+        // Function to obfuscate LuaU code
         function obfuscateCode(code) {
             // Object to store old variable names and their corresponding new names
             let variableNames = {};
@@ -96,6 +107,12 @@
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
+
+            // Regex to detect comments and replace them with random words
+            const commentPattern = /--.*/g;
+            obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
+                return "-- " + generateRandomWords();
+            });
 
             return obfuscatedCode;
         }
