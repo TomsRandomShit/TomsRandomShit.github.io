@@ -82,27 +82,22 @@
             let minObfuscations = 5;
             let currentObfuscations = 0;
 
-            // Loop through each line of the user's code
-            for (let i = 0; i < codeLines.length; i++) {
-                // Add the original line of code
-                obfuscatedCode.push(codeLines[i]);
-
-                // Randomly decide whether to inject an obfuscation snippet after this line
-                if (Math.random() < 0.5 && currentObfuscations < minObfuscations) {
-                    obfuscatedCode.push(getRandomObfuscation());
-                    currentObfuscations++;
-                }
-
-                // Ensure we add at least 5 obfuscations by forcing them if not enough have been added
-                if (i === codeLines.length - 1 && currentObfuscations < minObfuscations) {
-                    while (currentObfuscations < minObfuscations) {
-                        obfuscatedCode.push(getRandomObfuscation());
-                        currentObfuscations++;
-                    }
-                }
+            // Loop through and add some obfuscations before inserting the actual code
+            while (currentObfuscations < minObfuscations / 2) {
+                obfuscatedCode.push(getRandomObfuscation());
+                currentObfuscations++;
             }
-            
-            // Join the array back into a string and collapse it into a single line (remove new lines and extra spaces)
+
+            // Add the user's actual code somewhere in the middle
+            obfuscatedCode.push(inputCode);
+
+            // Continue adding more obfuscation after the user's code
+            while (currentObfuscations < minObfuscations) {
+                obfuscatedCode.push(getRandomObfuscation());
+                currentObfuscations++;
+            }
+
+            // Join the array back into a single line, removing extra line breaks and spaces
             const finalCode = obfuscatedCode.join(' ').replace(/\s+/g, ' ').trim();
             
             // Output the obfuscated code
