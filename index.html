@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Lua Code Modifier</title>
+    <title>Roblox Lua Code Obfuscator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
         }
         textarea {
             width: 100%;
-            height: 100px;
+            height: 150px;
             margin-bottom: 10px;
         }
         button {
@@ -22,30 +22,61 @@
 </head>
 <body>
 
-    <h1>Roblox Lua Code Modifier</h1>
+    <h1>Roblox Lua Code Obfuscator</h1>
     <h2>Input Roblox Lua Code:</h2>
     <textarea id="inputCode" placeholder="Enter your Roblox Lua code here..."></textarea>
 
-    <button onclick="modifyCode()">Modify Code</button>
+    <button onclick="obfuscateCode()">Obfuscate Code</button>
 
-    <h2>Output Code:</h2>
-    <textarea id="outputCode" placeholder="Modified code will appear here..." readonly></textarea>
+    <h2>Obfuscated Code:</h2>
+    <textarea id="outputCode" placeholder="Obfuscated code will appear here..." readonly></textarea>
 
     <script>
-        function getRandomFunction() {
+        function getRandomObfuscationFunction() {
             const functions = [
-                "function randomFunction1()\n\tprint('Random Function 1')\nend\n",
-                "function randomFunction2()\n\tprint('Random Function 2')\nend\n",
-                "function randomFunction3()\n\tprint('Random Function 3')\nend\n"
+                "function a1b2c3()\n\tlocal x = math.random(1, 100)\n\tprint(x)\nend\n",
+                "function d4e5f6(y)\n\tfor i = 1, 10 do\n\t\ty = y + i\n\tend\n\treturn y\nend\n",
+                "function g7h8i9(z)\n\tlocal t = {}\n\tfor i = 1, 5 do\n\t\tt[i] = z .. i\n\tend\n\treturn table.concat(t, ', ')\nend\n",
+                "function j1k2l3(a, b)\n\treturn a * b + math.sin(b)\nend\n",
+                "function m4n5o6()\n\tlocal words = {'apple', 'banana', 'cherry'}\n\treturn words[math.random(1, #words)]\nend\n",
+                "function p7q8r9()\n\tlocal s = 'abcdefghijklmnopqrstuvwxyz'\n\treturn string.sub(s, math.random(1, #s), math.random(1, #s))\nend\n",
+                "function obf1()\n\treturn 1 + 2 * 3\nend\n",
+                "function obf2(x)\n\treturn (x + 5) * math.random(1, 10)\nend\n",
+                "function randomChar()\n\tlocal chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'\n\treturn chars[math.random(1, #chars)]\nend\n"
             ];
             return functions[Math.floor(Math.random() * functions.length)];
         }
 
-        function modifyCode() {
-            const inputCode = document.getElementById('inputCode').value;
-            const randomFunctions = getRandomFunction() + getRandomFunction();
-            const modifiedCode = randomFunctions + inputCode;
-            document.getElementById('outputCode').value = modifiedCode;
+        function obfuscateCode() {
+            let inputCode = document.getElementById('inputCode').value;
+
+            // Split the input code into lines for more granular control over insertion
+            let codeLines = inputCode.split('\n');
+            let obfuscatedCode = '';
+
+            // Add random functions in-between lines of the original code
+            const numOfInsertions = Math.floor(Math.random() * 4) + 3; // Insert random functions 3 to 6 times
+
+            let insertionIndices = [];
+            for (let i = 0; i < numOfInsertions; i++) {
+                // Generate unique random indices for function insertion
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * codeLines.length);
+                } while (insertionIndices.includes(randomIndex));
+                insertionIndices.push(randomIndex);
+            }
+
+            // Interleave the random functions into the original code
+            for (let i = 0; i < codeLines.length; i++) {
+                obfuscatedCode += codeLines[i] + '\n';
+                if (insertionIndices.includes(i)) {
+                    obfuscatedCode += getRandomObfuscationFunction() + '\n';
+                }
+            }
+
+            // Display the obfuscated code in the output textbox
+            document.getElementById('outputCode').value = obfuscatedCode;
         }
     </script>
 
