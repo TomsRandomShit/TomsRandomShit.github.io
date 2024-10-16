@@ -83,7 +83,7 @@
             return randomComment.trim();
         }
 
-        // Function to convert strings to ASCII number representation
+        // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
             const stringPattern = /(["'])(.*?)\1/g;
             return code.replace(stringPattern, (match, p1, p2) => {
@@ -92,23 +92,31 @@
             });
         }
 
-        // Function to obfuscate the "RenderStepped" and other specific method calls
-        function obfuscateSpecialFunctions(code) {
-            const specialPattern = /RenderStepped/g;
-            return code.replace(specialPattern, () => {
-                // Convert "RenderStepped" to ASCII numbers
-                const asciiValues = "RenderStepped".split('').map(char => char.charCodeAt(0)).join(', ');
-                return `string.char(${asciiValues})`;
+        // Function to obfuscate InputBegan connections
+        function obfuscateInputBegan(code) {
+            const inputBeganPattern = /(\w+)\.InputBegan:Connect\(function\((\w+)\)\s*%?{([^}]*)}\)/g;
+
+            return code.replace(inputBeganPattern, (match, objectName, inputVar, functionBody) => {
+                // Obfuscate inputVar and functionBody
+                const newInputVar = generateRandomName();
+                let obfuscatedFunctionBody = functionBody;
+
+                // Convert any strings in the function body to ASCII
+                obfuscatedFunctionBody = obfuscateStringLiterals(obfuscatedFunctionBody);
+
+                // Replace the inputVar with the new random name
+                obfuscatedFunctionBody = obfuscatedFunctionBody.replace(new RegExp(`\\b${inputVar}\\b`, 'g'), newInputVar);
+                return `${objectName}.InputBegan:Connect(function(${newInputVar}) {${obfuscatedFunctionBody}})`;
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, InputBegan, and comments
         function obfuscateCode(code) {
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
 
-            // Step 2: Handle special functions like RenderStepped
-            obfuscatedCode = obfuscateSpecialFunctions(obfuscatedCode);
+            // Step 2: Handle InputBegan obfuscation
+            obfuscatedCode = obfuscateInputBegan(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
