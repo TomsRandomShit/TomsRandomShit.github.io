@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Lua Code Obfuscator</title>
+    <title>Roblox Lua Code Modifier</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
         }
         textarea {
             width: 100%;
-            height: 150px;
+            height: 100px;
             margin-bottom: 10px;
         }
         button {
@@ -22,151 +22,31 @@
 </head>
 <body>
 
-    <h1>Roblox Lua Code Obfuscator</h1>
+    <h1>Roblox Lua Code Modifier</h1>
     <h2>Input Roblox Lua Code:</h2>
-    <textarea id="inputCode" placeholder="Enter your Roblox Lua code here..."></textarea>
+    <textarea id="a" placeholder="Enter your Roblox Lua code here..."></textarea>
 
-    <button onclick="obfuscateCode()">Obfuscate Code</button>
+    <button onclick="b()">Modify Code</button>
 
-    <h2>Obfuscated Code:</h2>
-    <textarea id="outputCode" placeholder="Obfuscated code will appear here..." readonly></textarea>
+    <h2>Output Code:</h2>
+    <textarea id="c" placeholder="Modified code will appear here..." readonly></textarea>
 
     <script>
-        // Function to generate a random function name
-        function generateRandomFunctionName() {
-            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            let name = '';
-            for (let i = 0; i < 12; i++) {
-                name += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return name + 'F'; // Adding 'F' at the end for consistency with function names
+        // Obfuscated function names and variables
+        function d() {
+            const e = [
+                "function f1()\n\tprint('Random Function 1')\nend\n",
+                "function f2()\n\tprint('Random Function 2')\nend\n",
+                "function f3()\n\tprint('Random Function 3')\nend\n"
+            ];
+            return e[Math.floor(Math.random() * e.length)];
         }
 
-        // List of 47 obfuscating functions without comments
-        const obfuscatingFunctions = [
-            "function {{RANDOM_NAME}}()\nlocal a = 0\nwhile a < 5 do a = a + 1 end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal b = 10 * 3\nreturn b / 2\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = math.random(1, 100)\nreturn x * 2\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 1\nfor i = 1, 5 do a = a * i end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal str = 'hidden'\nreturn str:reverse()\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn math.sqrt(144)\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal count = 0\nfor i = 1, 100 do count = count + i end\nreturn count\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal arr = {1, 2, 3}\nreturn arr[2]\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 5\nif a > 3 then return true end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 'Hello'\nlocal b = 'World'\nreturn a .. ' ' .. b\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = 0\nfor i = 1, 10 do x = x + i end\nreturn x\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = {x = 1, y = 2}\na.x = a.x + a.y\nreturn a.x\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 100\nfor i = 1, 10 do a = a - i end\nreturn a\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 'abc'\nreturn a:upper()\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn string.char(65)\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = 'test'\nreturn #x\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 10\nreturn a + 5\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 5\nif a < 10 then return a * 2 end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 'Lua'\nreturn a:len()\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn table.concat({1, 2, 3}, '-')\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 1\nfor i = 1, 10 do a = a + i end\nreturn a\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn math.floor(3.14)\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = {1, 2, 3}\nreturn a[3]\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 2\nreturn a ^ 3\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 1\nwhile a < 10 do a = a + 2 end\nreturn a\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 3\nif a == 3 then return a + 1 end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 'abc'\nreturn a:reverse()\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 1\nlocal b = 2\nreturn a * b\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = 0\nfor i = 1, 5 do x = x + i end\nreturn x\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn string.find('Lua', 'u')\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 7\nreturn a % 2\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = {10, 20, 30}\nreturn a[1] + a[2]\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = '123'\nreturn tonumber(a) + 1\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = 'hello'\nreturn x:gsub('hello', 'hi')\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 'test'\nreturn a:sub(1, 2)\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn math.max(1, 5, 3)\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 5\nreturn a * a\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = {1, 2, 3}\nreturn x[#x]\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn tostring(100)\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 'a'\nlocal b = 'b'\nreturn a .. b\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 10\nreturn a // 3\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn string.rep('Lua', 3)\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = 'world'\nreturn x:len()\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 1\nlocal b = 2\nreturn a + b\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 10\nif a > 5 then return a end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal arr = {2, 3, 5}\nreturn arr[2] * 2\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = {a = 1, b = 2}\nreturn x.a + x.b\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 'Lua'\nreturn a .. ' programming'\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = 10\nreturn a ^ 2\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal arr = {1, 2, 3}\nfor i = 1, #arr do end\nend\n",
-            "function {{RANDOM_NAME}}()\nreturn math.abs(-10)\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal a = {1, 2}\nreturn #a\nend\n"
-        ];
-
-        // Function to replace placeholder {{RANDOM_NAME}} with actual random names
-        function replaceFunctionNames(code) {
-            return code.replace(/{{RANDOM_NAME}}/g, generateRandomFunctionName());
-        }
-
-        // Function to get a random obfuscation snippet
-        function getRandomObfuscation() {
-            const randomIndex = Math.floor(Math.random() * obfuscatingFunctions.length);
-            let obfuscationCode = obfuscatingFunctions[randomIndex];
-            return replaceFunctionNames(obfuscationCode);
-        }
-
-        // Function to split long code into chunks
-        function splitCodeIntoChunks(code, chunkSize) {
-            const lines = code.split('\n');
-            const chunks = [];
-            for (let i = 0; i < lines.length; i += chunkSize) {
-                chunks.push(lines.slice(i, i + chunkSize).join('\n'));
-            }
-            return chunks;
-        }
-
-        // Main function to obfuscate the code and ensure at least 5 obfuscation functions
-        function obfuscateCode() {
-            const inputCode = document.getElementById('inputCode').value;
-            
-            // Split the input code into chunks if it’s long
-            const chunkSize = 5; // Arbitrary chunk size for splitting the code
-            let codeChunks = splitCodeIntoChunks(inputCode, chunkSize);
-            
-            // Create an array to hold the final obfuscated code
-            let obfuscatedCode = [];
-            let minObfuscations = 5;
-            let currentObfuscations = 0;
-
-            // Inject at least 5 obfuscation snippets before, between, or after the code chunks
-            for (let i = 0; i < codeChunks.length; i++) {
-                if (currentObfuscations < minObfuscations || Math.random() < 0.5) {
-                    obfuscatedCode.push(getRandomObfuscation());
-                    currentObfuscations++;
-                }
-
-                // Add a chunk of the original code
-                obfuscatedCode.push(codeChunks[i]);
-
-                // Randomly add another obfuscation between code chunks
-                if (i < codeChunks.length - 1 && (Math.random() < 0.5 || currentObfuscations < minObfuscations)) {
-                    obfuscatedCode.push(getRandomObfuscation());
-                    currentObfuscations++;
-                }
-            }
-
-            // If fewer than 5 obfuscations have been added, force more at the end
-            while (currentObfuscations < minObfuscations) {
-                obfuscatedCode.push(getRandomObfuscation());
-                currentObfuscations++;
-            }
-
-            // Randomly decide where to place the original code (not at the start)
-            if (Math.random() > 0.5) {
-                const randomIndex = Math.floor(Math.random() * (obfuscatedCode.length - 1)) + 1;
-                obfuscatedCode.splice(randomIndex, 0, inputCode);
-            }
-
-            // Join the obfuscated code array into a single line, with no newlines
-            const finalCode = obfuscatedCode.join(' ').replace(/\s+/g, ' ').trim();
-
-            // Output the final obfuscated code
-            document.getElementById('outputCode').value = finalCode;
+        function b() {
+            const a = document.getElementById('a').value;
+            const g = d() + d();
+            const h = g + a;
+            document.getElementById('c').value = h;
         }
     </script>
 
