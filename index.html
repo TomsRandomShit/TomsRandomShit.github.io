@@ -42,18 +42,55 @@
             return name + 'F'; // Adding 'F' at the end for consistency with function names
         }
 
-        // List of obfuscating functions with placeholder names
+        // List of 47 obfuscating functions with placeholder names (no comments)
         const obfuscatingFunctions = [
-            "function {{RANDOM_NAME}}()\nlocal a = 0\nwhile a < 5 do a = a + 1 end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal b = 10 * 3\nreturn b / 2\nend\n",
-            "function {{RANDOM_NAME}}()\n-- This function does nothing\nend\n",
-            "-- Random comment to confuse\n",
+            "function {{RANDOM_NAME}}() local a = 0 while a < 5 do a = a + 1 end end\n",
+            "function {{RANDOM_NAME}}() local b = 10 * 3 return b / 2 end\n",
+            "function {{RANDOM_NAME}}() end\n",
             "local _dummyVar = 42\n",
-            "for i = 1, 10 do end\n", // Empty loop
-            "function {{RANDOM_NAME}}()\nlocal a = 1\nif a == 1 then a = a + 1 end\nend\n",
-            "function {{RANDOM_NAME}}()\nlocal x = 'hidden'\nreturn x\nend\n",
-            "-- Misleading comment: TODO: Optimize this\n",
-            "function {{RANDOM_NAME}}()\nreturn math.random(1, 100)\nend\n"
+            "for i = 1, 10 do end\n",
+            "function {{RANDOM_NAME}}() local a = 1 if a == 1 then a = a + 1 end end\n",
+            "function {{RANDOM_NAME}}() local x = 'hidden' return x end\n",
+            "function {{RANDOM_NAME}}() return math.random(1, 100) end\n",
+            "function {{RANDOM_NAME}}() local y = 0 for i = 1, 50 do y = y + i end return y end\n",
+            "function {{RANDOM_NAME}}() local t = {1,2,3} return #t end\n",
+            "function {{RANDOM_NAME}}() local t = {} for i = 1, 100 do t[i] = i end end\n",
+            "function {{RANDOM_NAME}}() local z = 'useless' return z end\n",
+            "function {{RANDOM_NAME}}() local str = 'obfuscation' return #str end\n",
+            "function {{RANDOM_NAME}}() local val = 0 while val < 100 do val = val + 1 end end\n",
+            "function {{RANDOM_NAME}}() local num = math.pi * 2 return num end\n",
+            "function {{RANDOM_NAME}}() local check = true if check then check = false end end\n",
+            "function {{RANDOM_NAME}}() local w = 1 + 1 end\n",
+            "function {{RANDOM_NAME}}() return 1 end\n",
+            "function {{RANDOM_NAME}}() local s = string.reverse('confusion') return s end\n",
+            "function {{RANDOM_NAME}}() local c = 10 for i = 1, 10 do c = c - 1 end end\n",
+            "function {{RANDOM_NAME}}() local tbl = {a = 1, b = 2} return tbl.a end\n",
+            "function {{RANDOM_NAME}}() local arr = {'a', 'b', 'c'} return table.concat(arr, ',') end\n",
+            "function {{RANDOM_NAME}}() local total = 0 for i = 1, 100 do total = total + i end return total end\n",
+            "function {{RANDOM_NAME}}() local mod = 50 % 3 return mod end\n",
+            "function {{RANDOM_NAME}}() return 2 ^ 8 end\n",
+            "function {{RANDOM_NAME}}() local bool = false return not bool end\n",
+            "function {{RANDOM_NAME}}() local calc = 100 * (3 + 7) return calc end\n",
+            "function {{RANDOM_NAME}}() local f = string.upper('fake') return f end\n",
+            "function {{RANDOM_NAME}}() local mix = 'mix' .. 'ed' return mix end\n",
+            "function {{RANDOM_NAME}}() local div = 500 / 5 return div end\n",
+            "function {{RANDOM_NAME}}() local hex = string.format('%x', 255) return hex end\n",
+            "function {{RANDOM_NAME}}() local float = math.floor(9.999) return float end\n",
+            "function {{RANDOM_NAME}}() local mt = setmetatable({}, {__index = function() return nil end}) end\n",
+            "function {{RANDOM_NAME}}() local key = {} key[1] = 'key' return key[1] end\n",
+            "function {{RANDOM_NAME}}() local num = tonumber('50') return num end\n",
+            "function {{RANDOM_NAME}}() local t = os.date('*t') return t.hour end\n",
+            "function {{RANDOM_NAME}}() local c = math.cos(math.rad(90)) return c end\n",
+            "function {{RANDOM_NAME}}() local deg = math.deg(math.pi) return deg end\n",
+            "function {{RANDOM_NAME}}() local bytes = string.byte('a') return bytes end\n",
+            "function {{RANDOM_NAME}}() local x, y = math.modf(10.75) return y end\n",
+            "function {{RANDOM_NAME}}() local concat = table.concat({1, 2, 3}, '-') return concat end\n",
+            "function {{RANDOM_NAME}}() local start, stop = string.find('hidden', 'id') return start end\n",
+            "function {{RANDOM_NAME}}() local len = string.len('long') return len end\n",
+            "function {{RANDOM_NAME}}() local round = math.ceil(9.1) return round end\n",
+            "function {{RANDOM_NAME}}() local zero = 0 return zero end\n",
+            "function {{RANDOM_NAME}}() local invert = bit.bnot(0) return invert end\n",
+            "function {{RANDOM_NAME}}() return select(1, ...) end\n"
         ];
 
         // Function to replace placeholder {{RANDOM_NAME}} with actual random names
