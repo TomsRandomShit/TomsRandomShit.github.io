@@ -52,7 +52,7 @@
             return obfuscatingFunctions[randomIndex];
         }
 
-        // Function to infuse obfuscation into the user's code
+        // Function to obfuscate the user's code
         function obfuscateCode() {
             const inputCode = document.getElementById('inputCode').value;
             
@@ -62,14 +62,27 @@
             // Create a new array to hold the obfuscated code
             let obfuscatedCode = [];
             
+            // Minimum number of obfuscations we want to insert
+            let minObfuscations = 5;
+            let currentObfuscations = 0;
+
             // Loop through each line of the user's code
             for (let i = 0; i < codeLines.length; i++) {
                 // Add the original line of code
                 obfuscatedCode.push(codeLines[i]);
-                
+
                 // Randomly decide whether to inject an obfuscation snippet after this line
-                if (Math.random() < 0.5) { // 50% chance to inject obfuscation
+                if (Math.random() < 0.5 && currentObfuscations < minObfuscations) { // 50% chance to inject obfuscation
                     obfuscatedCode.push(getRandomObfuscation());
+                    currentObfuscations++;
+                }
+
+                // Ensure we add at least 5 obfuscations by forcing them if not enough have been added
+                if (i === codeLines.length - 1 && currentObfuscations < minObfuscations) {
+                    while (currentObfuscations < minObfuscations) {
+                        obfuscatedCode.push(getRandomObfuscation());
+                        currentObfuscations++;
+                    }
                 }
             }
             
