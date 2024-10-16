@@ -95,25 +95,10 @@
             });
         }
 
-        // Function to obfuscate InputBegan events to number instructions
-        function obfuscateInputBegan(code) {
-            // Regex to match InputBegan events
-            const inputBeganPattern = /(.*):Connect\(function\(input\)\s*{([^]*)}\)/g;
-
-            return code.replace(inputBeganPattern, (match, p1, p2) => {
-                // Replace strings in the InputBegan function with number instructions
-                const obfuscatedBody = obfuscateStringLiterals(p2);
-                return `${p1}:Connect(function(input) ${obfuscatedBody})`;
-            });
-        }
-
         // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
-
-            // Step 2: Handle InputBegan Obfuscation
-            obfuscatedCode = obfuscateInputBegan(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
@@ -121,7 +106,7 @@
             // Regex to detect variables that are initialized (not function or service-related)
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
 
-            // Step 3: Replace each variable name with a random name
+            // Step 2: Replace each variable name with a random name
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
                     // Generate a new random name and map it to the old one
@@ -130,20 +115,20 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 4: Replace any references to the old variable names elsewhere in the code
+            // Step 3: Replace any references to the old variable names elsewhere in the code
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 5: Replace comments with random words
+            // Step 4: Replace comments with random words
             const commentPattern = /--.*/g;
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
 
-            // Step 6: Replace function names with random names
+            // Step 5: Replace function names with random names
             const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
             obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
                 if (!nameMappings[p1]) {
@@ -152,7 +137,7 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 7: Replace loop variables in 'for' loops
+            // Step 6: Replace loop variables in 'for' loops
             const forLoopPattern = /for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+/g;
             obfuscatedCode = obfuscatedCode.replace(forLoopPattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
@@ -164,21 +149,31 @@
                 return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
             });
 
-            // Step 8: Replace any references to loop variables elsewhere
+            // Step 7: Replace any references to loop variables elsewhere
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            return obfuscatedCode;
+            // Step 8: Add the header text
+            const headerText = `
+-- ████████╗ ██████╗ ███╗   ███╗███████╗██████╗  █████╗ ███╗   ██╗██████╗  ██████╗ ███╗   ███╗███████╗██╗  ██╗██╗████████╗
+-- ╚══██╔══╝██╔═══██╗████╗ ████║██╔════╝██╔══██╗██╔══██╗████╗  ██║██╔══██╗██╔═══██╗████╗ ████║██╔════╝██║  ██║██║╚══██╔══╝
+--    ██║   ██║   ██║██╔████╔██║███████╗██████╔╝███████║██╔██╗ ██║██║  ██║██║   ██║██╔████╔██║███████╗███████║██║   ██║
+--    ██║   ██║   ██║██║╚██╔╝██║╚════██║██╔══██╗██╔══██║██║╚██╗██║██║  ██║██║   ██║██║╚██╔╝██║╚════██║██╔══██║██║   ██║
+--    ██║   ╚██████╔╝██║ ╚═╝ ██║███████║██║  ██║██║  ██║██║ ╚████║██████╔╝╚██████╔╝██║ ╚═╝ ██║███████║██║  ██║██║   ██║
+--    ╚═╝    ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝
+            `;
+
+            return headerText + obfuscatedCode;
         }
 
         document.getElementById('obfuscateButton').onclick = function() {
             const inputScript = document.getElementById('inputScript').value;
             const outputScript = obfuscateCode(inputScript);
             document.getElementById('outputScript').value = outputScript;
-        }
+        };
     </script>
 </body>
 </html>
