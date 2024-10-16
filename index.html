@@ -49,6 +49,11 @@
         button:hover {
             background-color: #45a049;
         }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -58,6 +63,7 @@
         <button id="obfuscateButton">Obfuscate</button>
         <h2>Obfuscated Code</h2>
         <textarea id="outputScript" readonly></textarea>
+        <div class="error" id="errorMessage"></div>
     </div>
 
     <script>
@@ -71,20 +77,38 @@
             return result;
         }
 
+        function isValidLuaU(code) {
+            // Basic validation: Check for presence of function or print statements.
+            const functionPattern = /function\s+\w+\s*\(.*\)\s*[\s\S]*?end/g;
+            const printPattern = /print\s*\(.*\)\s*;/g;
+            return functionPattern.test(code) || printPattern.test(code);
+        }
+
         function obfuscateCode(code) {
             const variablePattern = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g; // Matches variable names
+            const functionPattern = /function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(.*\)\s*([\s\S]*?)(?=\bend\b)/g; // Matches functions
             const stringPattern = /(['"`])(?:(?=(\\?))\2.)*?\1/g; // Matches strings
-
+            
             let obfuscatedCode = code;
 
-            // Obfuscate variables
+            // Obfuscate variable names
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match) => {
-                return generateRandomString(5); // Replace variable names with random strings
+                if (match !== 'function' && match !== 'end' && match !== 'print') {
+                    return generateRandomString(5);
+                }
+                return match;
             });
 
-            // Obfuscate strings (for demonstration; would be more complex in real scenarios)
+            // Obfuscate functions and add useless code
+            obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, funcName, funcBody) => {
+                const newFuncName = generateRandomString(8);
+                const uselessCode = `local _ = 1 + 1; -- Useless code\n`;
+                return `function ${newFuncName}()\n${uselessCode}${funcBody}\nend`;
+            });
+
+            // Obfuscate strings
             obfuscatedCode = obfuscatedCode.replace(stringPattern, (match) => {
-                return generateRandomString(8); // Replace strings with random strings
+                return `'${generateRandomString(8)}'`; // Replace strings with random strings
             });
 
             return obfuscatedCode;
@@ -92,6 +116,16 @@
 
         document.getElementById('obfuscateButton').onclick = function() {
             const inputScript = document.getElementById('inputScript').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Clear previous error message
+            errorMessage.textContent = '';
+
+            if (!isValidLuaU(inputScript)) {
+                errorMessage.textContent = 'Please enter valid LuaU code.';
+                return;
+            }
+
             const outputScript = obfuscateCode(inputScript);
             document.getElementById('outputScript').value = outputScript;
         }
