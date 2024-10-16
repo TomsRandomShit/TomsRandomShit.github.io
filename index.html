@@ -61,7 +61,7 @@
     </div>
 
     <script>
-        // Function to generate a random string (letters only) for function names
+        // Function to generate a random string (letters only) for variable names
         function generateRandomName() {
             const letters = "abcdefghijklmnopqrstuvwxyz";
             let randomName = "";
@@ -72,27 +72,37 @@
             return randomName;
         }
 
-        // Function to obfuscate LuaU code by renaming functions
+        // Function to obfuscate LuaU code by renaming service variables
         function obfuscateCode(code) {
-            // Regex to detect functions in LuaU script
-            const functionPattern = /function\s+([a-zA-Z_]\w*)/g;
+            // Object to store old variable names and their corresponding new names
+            let variableNames = {};
 
-            // Object to store old function names and their corresponding new names
-            let functionNames = {};
+            // Regex to detect service variables in LuaU script
+            const servicePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*game:GetService\(["']\w+["']\)/g;
+            const workspacePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*workspace\.\w+/g;
 
-            // Replace each function name with a random name
-            let obfuscatedCode = code.replace(functionPattern, (match, p1) => {
-                if (!functionNames[p1]) {
+            // Replace each service variable name with a random name
+            let obfuscatedCode = code.replace(servicePattern, (match, p1) => {
+                if (!variableNames[p1]) {
                     // Generate a new random name and map it to the old one
-                    functionNames[p1] = generateRandomName();
+                    variableNames[p1] = generateRandomName();
                 }
-                return `function ${functionNames[p1]}`;
+                return match.replace(p1, variableNames[p1]);
             });
 
-            // Replace any references to the old function names elsewhere in the code
-            for (const oldName in functionNames) {
-                const newName = functionNames[oldName];
-                // Use word boundaries to make sure only full function names are replaced
+            // Replace workspace variables like 'local camera = workspace.CurrentCamera'
+            obfuscatedCode = obfuscatedCode.replace(workspacePattern, (match, p1) => {
+                if (!variableNames[p1]) {
+                    // Generate a new random name and map it to the old one
+                    variableNames[p1] = generateRandomName();
+                }
+                return match.replace(p1, variableNames[p1]);
+            });
+
+            // Replace any references to the old variable names elsewhere in the code
+            for (const oldName in variableNames) {
+                const newName = variableNames[oldName];
+                // Use word boundaries to make sure only full variable names are replaced
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
