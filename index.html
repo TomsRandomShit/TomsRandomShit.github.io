@@ -32,7 +32,7 @@
     <textarea id="outputCode" placeholder="Obfuscated code will appear here..." readonly></textarea>
 
     <script>
-        // List of random obfuscating functions
+        // List of random obfuscating functions and snippets
         const obfuscatingFunctions = [
             "function randomFuncA()\n\tlocal a = 0\n\twhile a < 5 do a = a + 1 end\nend\n",
             "function uselessCalculation()\n\tlocal b = 10 * 3\n\treturn b / 2\nend\n",
@@ -46,24 +46,38 @@
             "function randomNumberGenerator()\n\treturn math.random(1, 100)\nend\n"
         ];
 
-        // Function to get multiple random obfuscation code snippets
-        function getRandomObfuscations() {
-            let obfuscation = "";
-            let numberOfFunctions = Math.floor(Math.random() * 5) + 3; // Add between 3 to 7 functions
-            
-            for (let i = 0; i < numberOfFunctions; i++) {
-                let randomIndex = Math.floor(Math.random() * obfuscatingFunctions.length);
-                obfuscation += obfuscatingFunctions[randomIndex] + "\n";
-            }
-            return obfuscation;
+        // Function to get a random obfuscation snippet
+        function getRandomObfuscation() {
+            const randomIndex = Math.floor(Math.random() * obfuscatingFunctions.length);
+            return obfuscatingFunctions[randomIndex];
         }
 
-        // Function to obfuscate the input code
+        // Function to infuse obfuscation into the user's code
         function obfuscateCode() {
             const inputCode = document.getElementById('inputCode').value;
-            const randomObfuscations = getRandomObfuscations();
-            const obfuscatedCode = randomObfuscations + inputCode;
-            document.getElementById('outputCode').value = obfuscatedCode;
+            
+            // Split the input code into lines
+            let codeLines = inputCode.split('\n');
+            
+            // Create a new array to hold the obfuscated code
+            let obfuscatedCode = [];
+            
+            // Loop through each line of the user's code
+            for (let i = 0; i < codeLines.length; i++) {
+                // Add the original line of code
+                obfuscatedCode.push(codeLines[i]);
+                
+                // Randomly decide whether to inject an obfuscation snippet after this line
+                if (Math.random() < 0.5) { // 50% chance to inject obfuscation
+                    obfuscatedCode.push(getRandomObfuscation());
+                }
+            }
+            
+            // Join the array back into a string with line breaks
+            const finalCode = obfuscatedCode.join('\n');
+            
+            // Output the obfuscated code
+            document.getElementById('outputCode').value = finalCode;
         }
     </script>
 
