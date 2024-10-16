@@ -61,7 +61,7 @@
     </div>
 
     <script>
-        // Function to generate a random string (letters only) for variable names
+        // Function to generate a random string (letters only) for variable names or functions
         function generateRandomName() {
             const letters = "abcdefghijklmnopqrstuvwxyz";
             let randomName = "";
@@ -72,7 +72,7 @@
             return randomName;
         }
 
-        // Function to generate a random comment replacement
+        // Function to generate random words for comment replacement
         function generateRandomWords() {
             const randomWords = ["book", "fish", "dictionary", "bee", "apple", "sun", "pencil", "flower", "cloud", "window"];
             let wordCount = Math.floor(Math.random() * 4) + 2; // Random word count between 2 and 5
@@ -83,26 +83,26 @@
             return randomComment.trim();
         }
 
-        // Function to obfuscate LuaU code
+        // Function to obfuscate LuaU code by renaming variables, functions, and comments
         function obfuscateCode(code) {
-            // Object to store old variable names and their corresponding new names
-            let variableNames = {};
+            // Object to store old variable and function names and their corresponding new names
+            let nameMappings = {};
 
             // Regex to detect variables that are initialized (not function or service-related)
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
 
             // Replace each variable name with a random name
             let obfuscatedCode = code.replace(variablePattern, (match, p1, p2) => {
-                if (!variableNames[p1]) {
+                if (!nameMappings[p1]) {
                     // Generate a new random name and map it to the old one
-                    variableNames[p1] = generateRandomName();
+                    nameMappings[p1] = generateRandomName();
                 }
-                return match.replace(p1, variableNames[p1]);
+                return match.replace(p1, nameMappings[p1]);
             });
 
             // Replace any references to the old variable names elsewhere in the code
-            for (const oldName in variableNames) {
-                const newName = variableNames[oldName];
+            for (const oldName in nameMappings) {
+                const newName = nameMappings[oldName];
                 // Use word boundaries to make sure only full variable names are replaced
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
@@ -113,6 +113,26 @@
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
+
+            // Regex to detect both global and local function definitions
+            const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
+
+            // Replace each function name with a random name
+            obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
+                if (!nameMappings[p1]) {
+                    // Generate a new random name for the function
+                    nameMappings[p1] = generateRandomName();
+                }
+                return match.replace(p1, nameMappings[p1]);
+            });
+
+            // Replace any references to the old function names elsewhere in the code
+            for (const oldName in nameMappings) {
+                const newName = nameMappings[oldName];
+                // Use word boundaries to make sure only full function names are replaced
+                const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
+                obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
+            }
 
             return obfuscatedCode;
         }
