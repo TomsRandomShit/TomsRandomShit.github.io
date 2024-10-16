@@ -68,39 +68,62 @@
             return replaceFunctionNames(obfuscationCode);
         }
 
-        // Function to obfuscate the user's code and ensure at least 5 obfuscations
+        // Function to split long code into chunks
+        function splitCodeIntoChunks(code, chunkSize) {
+            const lines = code.split('\n');
+            const chunks = [];
+            for (let i = 0; i < lines.length; i += chunkSize) {
+                chunks.push(lines.slice(i, i + chunkSize).join('\n'));
+            }
+            return chunks;
+        }
+
+        // Main function to obfuscate the code and ensure at least 5 obfuscation functions
         function obfuscateCode() {
             const inputCode = document.getElementById('inputCode').value;
             
-            // Split the input code into lines
-            let codeLines = inputCode.split('\n');
+            // Split the input code into chunks if it’s long
+            const chunkSize = 5; // Arbitrary chunk size for splitting the code
+            let codeChunks = splitCodeIntoChunks(inputCode, chunkSize);
             
-            // Create a new array to hold the obfuscated code
+            // Create an array to hold the final obfuscated code
             let obfuscatedCode = [];
-            
-            // Minimum number of obfuscations we want to insert
             let minObfuscations = 5;
             let currentObfuscations = 0;
 
-            // Loop through and add some obfuscations before inserting the actual code
-            while (currentObfuscations < minObfuscations / 2) {
-                obfuscatedCode.push(getRandomObfuscation());
-                currentObfuscations++;
+            // Inject at least 5 obfuscation snippets before, between, or after the code chunks
+            for (let i = 0; i < codeChunks.length; i++) {
+                if (currentObfuscations < minObfuscations || Math.random() < 0.5) {
+                    obfuscatedCode.push(getRandomObfuscation());
+                    currentObfuscations++;
+                }
+
+                // Add a chunk of the original code
+                obfuscatedCode.push(codeChunks[i]);
+
+                // Randomly add another obfuscation between code chunks
+                if (i < codeChunks.length - 1 && (Math.random() < 0.5 || currentObfuscations < minObfuscations)) {
+                    obfuscatedCode.push(getRandomObfuscation());
+                    currentObfuscations++;
+                }
             }
 
-            // Add the user's actual code somewhere in the middle
-            obfuscatedCode.push(inputCode);
-
-            // Continue adding more obfuscation after the user's code
+            // If fewer than 5 obfuscations have been added, force more at the end
             while (currentObfuscations < minObfuscations) {
                 obfuscatedCode.push(getRandomObfuscation());
                 currentObfuscations++;
             }
 
-            // Join the array back into a single line, removing extra line breaks and spaces
+            // Randomly decide where to place the original code (not at the start)
+            if (Math.random() > 0.5) {
+                const randomIndex = Math.floor(Math.random() * (obfuscatedCode.length - 1)) + 1;
+                obfuscatedCode.splice(randomIndex, 0, inputCode);
+            }
+
+            // Join the obfuscated code array into a single line, with no newlines
             const finalCode = obfuscatedCode.join(' ').replace(/\s+/g, ' ').trim();
-            
-            // Output the obfuscated code
+
+            // Output the final obfuscated code
             document.getElementById('outputCode').value = finalCode;
         }
     </script>
