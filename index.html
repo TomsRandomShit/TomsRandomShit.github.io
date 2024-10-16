@@ -83,7 +83,7 @@
             return randomComment.trim();
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, and comments
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, and comments
         function obfuscateCode(code) {
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
@@ -126,10 +126,23 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Replace any references to the old function names elsewhere in the code
+            // Regex to detect 'for' loops and replace loop variables
+            const forLoopPattern = /for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+/g;
+
+            // Replace loop variables with random names
+            obfuscatedCode = obfuscatedCode.replace(forLoopPattern, (match, p1, p2) => {
+                if (!nameMappings[p1]) {
+                    nameMappings[p1] = generateRandomName();
+                }
+                if (!nameMappings[p2]) {
+                    nameMappings[p2] = generateRandomName();
+                }
+                return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
+            });
+
+            // Replace any references to the old loop variables elsewhere in the code
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
-                // Use word boundaries to make sure only full function names are replaced
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
