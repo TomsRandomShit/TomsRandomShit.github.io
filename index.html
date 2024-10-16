@@ -85,8 +85,11 @@
 
         // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
+            // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
+
             return code.replace(stringPattern, (match, p1, p2) => {
+                // Convert each character in the string (p2) to its ASCII code using string.char()
                 const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
                 return `string.char(${asciiValues})`;
             });
@@ -100,21 +103,20 @@
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
 
-            // Regex to detect variables that are initialized (not function or service-related)
-            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*(,?\s*[a-zA-Z_]\w*)*\s*=\s*(.+)/g;
+            // Regex to detect multiple variable assignments (local var1, var2 = ...)
+            const variablePattern = /local\s+((?:[a-zA-Z_]\w*,\s*)*[a-zA-Z_]\w*)\s*=\s*(.*)/g;
 
             // Step 2: Replace each variable name with a random name
-            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2, p3) => {
-                let variables = [p1].concat(p2 ? p2.split(/\s*,\s*/) : []);
-                variables = variables.map(variable => {
-                    if (!nameMappings[variable]) {
-                        nameMappings[variable] = generateRandomName();
+            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, vars, value) => {
+                const varList = vars.split(',').map(v => v.trim());
+                const newVarList = varList.map(v => {
+                    if (!nameMappings[v]) {
+                        // Generate a new random name and map it to the old one
+                        nameMappings[v] = generateRandomName();
                     }
-                    return nameMappings[variable];
+                    return nameMappings[v];
                 });
-
-                const obfuscatedVariables = variables.join(", ");
-                return `local ${obfuscatedVariables} = ${p3}`;
+                return `local ${newVarList.join(', ')} = ${value}`;
             });
 
             // Step 3: Replace any references to the old variable names elsewhere in the code
