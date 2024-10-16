@@ -72,26 +72,16 @@
             return randomName;
         }
 
-        // Function to obfuscate LuaU code by renaming service variables
+        // Function to obfuscate LuaU code by renaming variables
         function obfuscateCode(code) {
             // Object to store old variable names and their corresponding new names
             let variableNames = {};
 
-            // Regex to detect service variables in LuaU script
-            const servicePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*game:GetService\(["']\w+["']\)/g;
-            const workspacePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*workspace\.\w+/g;
+            // Regex to detect variables that are initialized (not function or service-related)
+            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
 
-            // Replace each service variable name with a random name
-            let obfuscatedCode = code.replace(servicePattern, (match, p1) => {
-                if (!variableNames[p1]) {
-                    // Generate a new random name and map it to the old one
-                    variableNames[p1] = generateRandomName();
-                }
-                return match.replace(p1, variableNames[p1]);
-            });
-
-            // Replace workspace variables like 'local camera = workspace.CurrentCamera'
-            obfuscatedCode = obfuscatedCode.replace(workspacePattern, (match, p1) => {
+            // Replace each variable name with a random name
+            let obfuscatedCode = code.replace(variablePattern, (match, p1, p2) => {
                 if (!variableNames[p1]) {
                     // Generate a new random name and map it to the old one
                     variableNames[p1] = generateRandomName();
