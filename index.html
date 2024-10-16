@@ -85,11 +85,8 @@
 
         // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
-            // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
-
             return code.replace(stringPattern, (match, p1, p2) => {
-                // Convert each character in the string (p2) to its ASCII code using string.char()
                 const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
                 return `string.char(${asciiValues})`;
             });
@@ -104,15 +101,20 @@
             let nameMappings = {};
 
             // Regex to detect variables that are initialized (not function or service-related)
-            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
+            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*(,?\s*[a-zA-Z_]\w*)*\s*=\s*(.+)/g;
 
             // Step 2: Replace each variable name with a random name
-            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
-                if (!nameMappings[p1]) {
-                    // Generate a new random name and map it to the old one
-                    nameMappings[p1] = generateRandomName();
-                }
-                return match.replace(p1, nameMappings[p1]);
+            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2, p3) => {
+                let variables = [p1].concat(p2 ? p2.split(/\s*,\s*/) : []);
+                variables = variables.map(variable => {
+                    if (!nameMappings[variable]) {
+                        nameMappings[variable] = generateRandomName();
+                    }
+                    return nameMappings[variable];
+                });
+
+                const obfuscatedVariables = variables.join(", ");
+                return `local ${obfuscatedVariables} = ${p3}`;
             });
 
             // Step 3: Replace any references to the old variable names elsewhere in the code
