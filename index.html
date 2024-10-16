@@ -85,46 +85,46 @@
 
         // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
+            // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
+
             return code.replace(stringPattern, (match, p1, p2) => {
+                // Convert each character in the string (p2) to its ASCII code using string.char()
                 const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
                 return `string.char(${asciiValues})`;
             });
         }
 
-        // Function to obfuscate InputBegan connections
+        // Function to obfuscate InputBegan events to number instructions
         function obfuscateInputBegan(code) {
-            const inputBeganPattern = /(\w+)\.InputBegan:Connect\(function\((\w+)\)\s*%?{([^}]*)}\)/g;
+            // Regex to match InputBegan events
+            const inputBeganPattern = /(.*):Connect\(function\(input\)\s*{([^]*)}\)/g;
 
-            return code.replace(inputBeganPattern, (match, objectName, inputVar, functionBody) => {
-                // Obfuscate inputVar and functionBody
-                const newInputVar = generateRandomName();
-                let obfuscatedFunctionBody = functionBody;
-
-                // Convert any strings in the function body to ASCII
-                obfuscatedFunctionBody = obfuscateStringLiterals(obfuscatedFunctionBody);
-
-                // Replace the inputVar with the new random name
-                obfuscatedFunctionBody = obfuscatedFunctionBody.replace(new RegExp(`\\b${inputVar}\\b`, 'g'), newInputVar);
-                return `${objectName}.InputBegan:Connect(function(${newInputVar}) {${obfuscatedFunctionBody}})`;
+            return code.replace(inputBeganPattern, (match, p1, p2) => {
+                // Replace strings in the InputBegan function with number instructions
+                const obfuscatedBody = obfuscateStringLiterals(p2);
+                return `${p1}:Connect(function(input) ${obfuscatedBody})`;
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, InputBegan, and comments
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
 
-            // Step 2: Handle InputBegan obfuscation
+            // Step 2: Handle InputBegan Obfuscation
             obfuscatedCode = obfuscateInputBegan(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
 
-            // Step 3: Replace each variable name with a random name
+            // Regex to detect variables that are initialized (not function or service-related)
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
+
+            // Step 3: Replace each variable name with a random name
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
+                    // Generate a new random name and map it to the old one
                     nameMappings[p1] = generateRandomName();
                 }
                 return match.replace(p1, nameMappings[p1]);
