@@ -95,7 +95,7 @@
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, comments, and special methods
         function obfuscateCode(code) {
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
@@ -103,49 +103,43 @@
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
 
-            // Regex to detect multiple variable assignments (local var1, var2 = ...)
-            const variablePattern = /local\s+((?:[a-zA-Z_]\w*,\s*)*[a-zA-Z_]\w*)\s*=\s*(.*)/g;
-
-            // Step 2: Replace each variable name with a random name
-            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, vars, value) => {
-                const varList = vars.split(',').map(v => v.trim());
-                const newVarList = varList.map(v => {
-                    if (!nameMappings[v]) {
-                        // Generate a new random name and map it to the old one
-                        nameMappings[v] = generateRandomName();
-                    }
-                    return nameMappings[v];
-                });
-                return `local ${newVarList.join(', ')} = ${value}`;
+            // Step 2: Replace occurrences of RenderStepped with a numerical representation
+            obfuscatedCode = obfuscatedCode.replace(/(\w+)\.RenderStepped/g, (match, p1) => {
+                return `${p1}.string.char(82, 101, 110, 100, 101, 114, 83, 116, 101, 112, 112, 101, 100)`;
             });
 
-            // Step 3: Replace any references to the old variable names elsewhere in the code
+            // Regex to detect variables that are initialized (not function or service-related)
+            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
+
+            // Step 3: Replace each variable name with a random name
+            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
+                if (!nameMappings[p1]) {
+                    // Generate a new random name and map it to the old one
+                    nameMappings[p1] = generateRandomName();
+                }
+                return match.replace(p1, nameMappings[p1]);
+            });
+
+            // Step 4: Replace any references to the old variable names elsewhere in the code
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 4: Replace comments with random words
+            // Step 5: Replace comments with random words
             const commentPattern = /--.*/g;
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
 
-            // Step 5: Replace function names with random names
+            // Step 6: Replace function names with random names
             const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
             obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
                 if (!nameMappings[p1]) {
                     nameMappings[p1] = generateRandomName();
                 }
                 return match.replace(p1, nameMappings[p1]);
-            });
-
-            // Step 6: Handle Event Connection Obfuscation
-            const eventConnectionPattern = /(\w+)\.(\w+):Connect\(function\s*\((.*?)\)/g;
-            obfuscatedCode = obfuscatedCode.replace(eventConnectionPattern, (match, object, method, params) => {
-                const newFunctionName = generateRandomName();
-                return `${object}.${method}:Connect(function(${params})`;
             });
 
             // Step 7: Replace loop variables in 'for' loops
