@@ -83,29 +83,54 @@
             return randomComment.trim();
         }
 
+        // Function to obfuscate function/event names into a lookup table system
+        function obfuscateFunctionNames(code) {
+            // Lookup table to store function names mapped to obfuscated numeric values
+            let functionLookupTable = {};
+            let currentIndex = 100; // Starting point for obfuscated numbers
+            
+            // List of known functions/events that can't be renamed directly (e.g. RenderStepped, UserInputService)
+            const knownFunctions = [
+                "RenderStepped",
+                "UserInputService",
+                "Heartbeat",
+                "Stepped",
+                "MouseButton1Click"
+            ];
+
+            // Create the lookup table for known functions and events
+            knownFunctions.forEach(funcName => {
+                functionLookupTable[funcName] = currentIndex++;
+            });
+
+            // Function to replace the function name in the code with a lookup call (lookup(###))
+            Object.keys(functionLookupTable).forEach(funcName => {
+                const lookupValue = functionLookupTable[funcName];
+                const regex = new RegExp(`\\b${funcName}\\b`, 'g');
+                code = code.replace(regex, `lookup(${lookupValue})`);
+            });
+
+            // Add the lookup table definition at the beginning of the code
+            const lookupTableCode = `
+local function lookup(key)
+    local lookupTable = {
+        ${Object.keys(functionLookupTable).map(funcName => `[${functionLookupTable[funcName]}] = "${funcName}"`).join(',\n        ')}
+    }
+    return lookupTable[key]
+end
+`;
+            return lookupTableCode + "\n" + code;
+        }
+
         // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
+            // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
 
             return code.replace(stringPattern, (match, p1, p2) => {
+                // Convert each character in the string (p2) to its ASCII code using string.char()
                 const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
                 return `string.char(${asciiValues})`;
-            });
-        }
-
-        // Function to obfuscate specific functions into numeric instructions
-        function obfuscateCustomFunctions(code) {
-            // Mapping of known functions to numeric instructions
-            const functionMapping = {
-                "RenderStepped": "1001",   // Example number for RenderStepped
-                "Heartbeat": "1002",        // Example number for Heartbeat
-                "UserInputService": "1003"  // Custom mapping for UserInputService (if needed)
-                // Add more mappings as needed
-            };
-
-            // Replace the function calls in the code with their numeric instructions
-            return code.replace(/\b(RenderStepped|Heartbeat|UserInputService)\b/g, (match) => {
-                return functionMapping[match] || match;  // Default to original if not found
             });
         }
 
@@ -114,37 +139,38 @@
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
 
-            // Step 2: Handle Custom Function Obfuscation
-            obfuscatedCode = obfuscateCustomFunctions(obfuscatedCode);
+            // Step 2: Handle Function/Event Name Obfuscation
+            obfuscatedCode = obfuscateFunctionNames(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
 
-            // Step 3: Regex to detect variables that are initialized
+            // Regex to detect variables that are initialized (not function or service-related)
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
 
-            // Step 4: Replace each variable name with a random name
+            // Step 3: Replace each variable name with a random name
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
+                    // Generate a new random name and map it to the old one
                     nameMappings[p1] = generateRandomName();
                 }
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 5: Replace any references to the old variable names elsewhere in the code
+            // Step 4: Replace any references to the old variable names elsewhere in the code
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 6: Replace comments with random words
+            // Step 5: Replace comments with random words
             const commentPattern = /--.*/g;
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
 
-            // Step 7: Replace function names with random names
+            // Step 6: Replace function names with random names
             const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
             obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
                 if (!nameMappings[p1]) {
@@ -153,7 +179,7 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 8: Replace loop variables in 'for' loops
+            // Step 7: Replace loop variables in 'for' loops
             const forLoopPattern = /for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+/g;
             obfuscatedCode = obfuscatedCode.replace(forLoopPattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
@@ -165,7 +191,7 @@
                 return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
             });
 
-            // Step 9: Replace any references to loop variables elsewhere
+            // Step 8: Replace any references to loop variables elsewhere
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
