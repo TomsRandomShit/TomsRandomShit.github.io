@@ -95,10 +95,31 @@
             });
         }
 
+        // Function to obfuscate known functions into encoded strings
+        function obfuscateKnownFunctions(code) {
+            // Mapping of known functions to obfuscated strings
+            const functionMapping = {
+                "RenderStepped": "EHAIhMpcePwxJ_CQ=_ENV;BQGaypyzebcWUtw='&3kKO?",
+                "Heartbeat": "EHAIhMpcePwxJ_CQ=_ENV;BQGaypyzebcWUtw='&3kKO?",
+                // Add more known functions as needed
+            };
+
+            // Replace known functions in the code with their obfuscated versions
+            for (const [func, obfuscated] of Object.entries(functionMapping)) {
+                const funcPattern = new RegExp(`\\b${func}\\b`, 'g');
+                code = code.replace(funcPattern, obfuscated);
+            }
+
+            return code;
+        }
+
         // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
+
+            // Step 2: Obfuscate known functions
+            obfuscatedCode = obfuscateKnownFunctions(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
@@ -106,7 +127,7 @@
             // Regex to detect variables that are initialized (not function or service-related)
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
 
-            // Step 2: Replace each variable name with a random name
+            // Step 3: Replace each variable name with a random name
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
                     // Generate a new random name and map it to the old one
@@ -115,20 +136,20 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 3: Replace any references to the old variable names elsewhere in the code
+            // Step 4: Replace any references to the old variable names elsewhere in the code
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 4: Replace comments with random words
+            // Step 5: Replace comments with random words
             const commentPattern = /--.*/g;
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
 
-            // Step 5: Replace function names with random names
+            // Step 6: Replace function names with random names
             const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
             obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
                 if (!nameMappings[p1]) {
@@ -137,7 +158,7 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 6: Replace loop variables in 'for' loops
+            // Step 7: Replace loop variables in 'for' loops
             const forLoopPattern = /for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+/g;
             obfuscatedCode = obfuscatedCode.replace(forLoopPattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
@@ -149,32 +170,21 @@
                 return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
             });
 
-            // Step 7: Replace any references to loop variables elsewhere
+            // Step 8: Replace any references to loop variables elsewhere
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 8: Add the header text
-            const headerText = `
---████████╗ ██████╗ ███╗   ███╗███████╗██████╗  █████╗ ███╗   ██╗██████╗  ██████╗ ███╗   ███╗███████╗██╗  ██╗██╗████████╗    ██████╗ ██╗████████╗██╗  ██╗██╗   ██╗██████╗    ██╗ ██████╗ 
---╚══██╔══╝██╔═══██╗████╗ ████║██╔════╝██╔══██╗██╔══██╗████╗  ██║██╔══██╗██╔═══██╗████╗ ████║██╔════╝██║  ██║██║╚══██╔══╝   ██╔════╝ ██║╚══██╔══╝██║  ██║██║   ██║██╔══██╗   ██║██╔═══██╗
---   ██║   ██║   ██║██╔████╔██║███████╗██████╔╝███████║██╔██╗ ██║██║  ██║██║   ██║██╔████╔██║███████╗███████║██║   ██║      ██║  ███╗██║   ██║   ███████║██║   ██║██████╔╝   ██║██║   ██║
---   ██║   ██║   ██║██║╚██╔╝██║╚════██║██╔══██╗██╔══██║██║╚██╗██║██║  ██║██║   ██║██║╚██╔╝██║╚════██║██╔══██║██║   ██║      ██║   ██║██║   ██║   ██╔══██║██║   ██║██╔══██╗   ██║██║   ██║
---   ██║   ╚██████╔╝██║ ╚═╝ ██║███████║██║  ██║██║  ██║██║ ╚████║██████╔╝╚██████╔╝██║ ╚═╝ ██║███████║██║  ██║██║   ██║   ██╗╚██████╔╝██║   ██║   ██║  ██║╚██████╔╝██████╔╝██╗██║╚██████╔╝
---   ╚═╝    ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝╚═╝ ╚═════╝ 
-                                                                                                                                                                                       
-            `;
-
-            return headerText + obfuscatedCode;
+            return obfuscatedCode;
         }
 
         document.getElementById('obfuscateButton').onclick = function() {
             const inputScript = document.getElementById('inputScript').value;
             const outputScript = obfuscateCode(inputScript);
             document.getElementById('outputScript').value = outputScript;
-        };
+        }
     </script>
 </body>
 </html>
