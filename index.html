@@ -83,32 +83,8 @@
             return randomComment.trim();
         }
 
-        // Function to handle encoding and decoding
-        function encodeService(service) {
-            const serviceMapping = {
-                "RenderStepped": "RS",
-                "Heartbeat": "HB",
-                "UserInputService": "UIS",
-                "RunService": "RSVC"
-                // Add other service or property encodings here
-            };
-            return serviceMapping[service] || service;
-        }
-
-        function decodeService(code) {
-            const decodingTable = {
-                "RS": "RenderStepped",
-                "HB": "Heartbeat",
-                "UIS": "UserInputService",
-                "RSVC": "RunService"
-                // Add other property/service decodings here
-            };
-            return decodingTable[code];
-        }
-
         // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
-            // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
 
             return code.replace(stringPattern, (match, p1, p2) => {
@@ -117,18 +93,34 @@
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
-        function obfuscateCode(code) {
-            // Step 1: Handle String Obfuscation
-            let obfuscatedCode = obfuscateStringLiterals(code);
+        // Function to obfuscate function calls (like RenderStepped)
+        function obfuscateFunctionCalls(code) {
+            const functionMappings = {
+                "RenderStepped": "1", // Use number to represent RenderStepped
+                "Heartbeat": "2",      // Example for other functions
+                // Add more mappings as needed
+            };
 
-            // Object to store old variable and function names and their corresponding new names
+            // Create an object to access these functions
+            const accessObject = `local access = { [1] = game:GetService("RunService").RenderStepped, [2] = game:GetService("RunService").Heartbeat }`;
+            code = accessObject + "\n" + code;
+
+            for (const func in functionMappings) {
+                const funcNumber = functionMappings[func];
+                const regexPattern = new RegExp(`\\b${func}\\b`, 'g');
+                code = code.replace(regexPattern, `access[${funcNumber}]`);
+            }
+
+            return code;
+        }
+
+        // Main obfuscation function
+        function obfuscateCode(code) {
+            let obfuscatedCode = obfuscateStringLiterals(code);
             let nameMappings = {};
 
-            // Regex to detect variables that are initialized (not function or service-related)
+            // Obfuscate variables
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
-
-            // Step 2: Replace each variable name with a random name
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
                     nameMappings[p1] = generateRandomName();
@@ -136,20 +128,20 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 3: Replace any references to the old variable names elsewhere in the code
+            // Replace variable references
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 4: Replace comments with random words
+            // Replace comments
             const commentPattern = /--.*/g;
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
 
-            // Step 5: Replace function names with random names
+            // Replace function names
             const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
             obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
                 if (!nameMappings[p1]) {
@@ -158,12 +150,27 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 6: Replace service members using decodeService
-            const servicePattern = /RunService\.(\w+)/g;
-            obfuscatedCode = obfuscatedCode.replace(servicePattern, (match, p1) => {
-                const encodedService = encodeService(p1);
-                return `RunService[decode("${encodedService}")]`;
+            // Replace loop variables
+            const forLoopPattern = /for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+/g;
+            obfuscatedCode = obfuscatedCode.replace(forLoopPattern, (match, p1, p2) => {
+                if (!nameMappings[p1]) {
+                    nameMappings[p1] = generateRandomName();
+                }
+                if (!nameMappings[p2]) {
+                    nameMappings[p2] = generateRandomName();
+                }
+                return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
             });
+
+            // Replace loop variable references
+            for (const oldName in nameMappings) {
+                const newName = nameMappings[oldName];
+                const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
+                obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
+            }
+
+            // Obfuscate specific function calls
+            obfuscatedCode = obfuscateFunctionCalls(obfuscatedCode);
 
             return obfuscatedCode;
         }
