@@ -85,34 +85,46 @@
 
         // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
+            // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
+
             return code.replace(stringPattern, (match, p1, p2) => {
+                // Convert each character in the string (p2) to its ASCII code using string.char()
                 const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
                 return `string.char(${asciiValues})`;
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, comments, and custom functions
+        // Function to obfuscate special functions to custom number instructions
+        function obfuscateSpecialFunctions(code) {
+            // Mapping of special functions to their custom number instructions
+            const specialFunctions = {
+                "RenderStepped": "string.char(82, 101, 110, 100, 101, 114, 83, 116, 101, 112, 112, 101, 100)",
+                "Heartbeat": "string.char(72, 101, 97, 114, 116, 98, 101, 97, 116)",
+                "Stepped": "string.char(83, 116, 101, 112, 112, 101, 100)",
+                "InputBegan": "string.char(73, 110, 112, 117, 116, 66, 101, 103, 97, 110)",
+                "InputEnded": "string.char(73, 110, 112, 117, 116, 69, 110, 100, 101, 100)",
+                "Changed": "string.char(67, 104, 97, 110, 103, 101, 100)"
+            };
+
+            // Replace special functions in the code with their mapped number instructions
+            for (const func in specialFunctions) {
+                const regex = new RegExp(`\\b${func}\\b`, 'g');
+                code = code.replace(regex, specialFunctions[func]);
+            }
+            return code;
+        }
+
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, comments, and special functions
         function obfuscateCode(code) {
             // Step 1: Handle String Obfuscation
             let obfuscatedCode = obfuscateStringLiterals(code);
 
+            // Step 2: Obfuscate Special Functions
+            obfuscatedCode = obfuscateSpecialFunctions(obfuscatedCode);
+
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
-            // Mapping for specific functions to custom numbers
-            const functionMapping = {
-                "RenderStepped": "101",
-                "Heartbeat": "102",
-                "Stepped": "103",
-                "InputBegan": "104",
-                "InputEnded": "105"
-            };
-
-            // Step 2: Replace function calls with custom numbers
-            Object.keys(functionMapping).forEach(func => {
-                const regex = new RegExp(`\\b${func}\\b`, 'g');
-                obfuscatedCode = obfuscatedCode.replace(regex, functionMapping[func]);
-            });
 
             // Regex to detect variables that are initialized (not function or service-related)
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
@@ -120,6 +132,7 @@
             // Step 3: Replace each variable name with a random name
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
+                    // Generate a new random name and map it to the old one
                     nameMappings[p1] = generateRandomName();
                 }
                 return match.replace(p1, nameMappings[p1]);
