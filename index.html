@@ -84,21 +84,15 @@
             return randomComment.trim();
         }
 
-        // Function to obfuscate method calls like GetMouse()
-        function obfuscateMethodCalls(code) {
-            // Regex pattern to detect method calls (like :GetMouse(), :CurrentCamera(), etc.)
-            const methodPattern = /([a-zA-Z_]\w*)\s*(:[a-zA-Z_]\w*\([^\)]*\))/g;
+        // Function to convert a service constant to obfuscated code
+        function obfuscateServices(code) {
+            // Regex to detect specific Roblox services
+            const servicePattern = /game\.(Players|Workspace|Teams|Lighting|ReplicatedStorage|ServerStorage|StarterGui|StarterPlayer)\b/g;
 
-            return code.replace(methodPattern, (match, objName, methodCall) => {
-                // Randomize the method name
-                const randomMethodName = generateRandomName();
-                // Extract the actual method name (e.g., GetMouse or CurrentCamera)
-                const methodName = methodCall.split('(')[0].slice(1); // Removing the colon from ':GetMouse'
-
-                // Create a new variable to store the method reference
-                const fnVarName = generateRandomName();
-                // Replace the method call with a dynamic function call
-                return `local ${fnVarName} = ${objName}.${methodName} ${methodCall.slice(methodName.length)}`;
+            // Replace each detected service call with a call to `game:GetService()`
+            return code.replace(servicePattern, (match, p1) => {
+                const obfuscatedService = `game:GetService("${p1}")`;
+                return obfuscatedService;
             });
         }
 
@@ -116,8 +110,8 @@
 
         // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
-            // Step 1: Handle Method Call Obfuscation
-            let obfuscatedCode = obfuscateMethodCalls(code);
+            // Step 1: Handle Service Obfuscation
+            let obfuscatedCode = obfuscateServices(code);
 
             // Step 2: Handle String Obfuscation
             obfuscatedCode = obfuscateStringLiterals(obfuscatedCode);
