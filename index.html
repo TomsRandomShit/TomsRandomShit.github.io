@@ -84,39 +84,45 @@
             return randomComment.trim();
         }
 
-        // Function to convert a string into its ASCII number representation using string.char()
-        function stringToAscii(code) {
-            return code.split('').map(char => char.charCodeAt(0)).join(', ');
-        }
+        // Function to convert method names and property names to ASCII characters
+        function obfuscateMethodsAndProperties(code) {
+            // Regex to match expressions like `thing:MethodName` or `thing.Property`
+            const methodPattern = /(\w+):([a-zA-Z_]\w*)\(/g;
+            const propertyPattern = /(\w+)\.([a-zA-Z_]\w*)/g;
 
-        // Function to obfuscate method names (like FindFirstChild, GetService)
-        function obfuscateMethodNames(code) {
-            // Regex pattern to detect method calls (thing:method() or thing.method)
-            const methodPattern = /([a-zA-Z_]\w*)\s*[:.](\w+)\s*\(/g;
-
-            return code.replace(methodPattern, (match, object, method) => {
-                // Obfuscate the method name using ASCII values
-                const obfuscatedMethod = `string.char(${stringToAscii(method)})`;
+            // Obfuscating methods
+            code = code.replace(methodPattern, (match, object, method) => {
+                // Convert method name to ASCII characters using string.char
+                const obfuscatedMethod = method.split('').map(char => `string.char(${char.charCodeAt(0)})`).join(",");
                 return `${object}:${obfuscatedMethod}(`;
             });
+
+            // Obfuscating properties
+            code = code.replace(propertyPattern, (match, object, property) => {
+                // Convert property name to ASCII characters using string.char
+                const obfuscatedProperty = property.split('').map(char => `string.char(${char.charCodeAt(0)})`).join(",");
+                return `${object}:${obfuscatedProperty}`;
+            });
+
+            return code;
         }
 
-        // Function to obfuscate string literals like "Players", "LocalPlayer" etc.
+        // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
             // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
 
             return code.replace(stringPattern, (match, p1, p2) => {
                 // Convert each character in the string (p2) to its ASCII code using string.char()
-                const asciiValues = stringToAscii(p2);
+                const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
                 return `string.char(${asciiValues})`;
             });
         }
 
         // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
-            // Step 1: Handle Method Obfuscation
-            let obfuscatedCode = obfuscateMethodNames(code);
+            // Step 1: Handle Method and Property Obfuscation
+            let obfuscatedCode = obfuscateMethodsAndProperties(code);
 
             // Step 2: Handle String Obfuscation
             obfuscatedCode = obfuscateStringLiterals(obfuscatedCode);
