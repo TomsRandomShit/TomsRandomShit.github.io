@@ -84,21 +84,22 @@
             return randomComment.trim();
         }
 
-        // Helper to obfuscate method names (like FindFirstChild, GetService, etc.)
-        function obfuscateMethodNames(code) {
-            const methodMappings = {
-                "FindFirstChild": generateRandomName(),
-                "GetService": generateRandomName(),
-            };
+        // Function to obfuscate methods after ":"
+        function obfuscateMethods(code) {
+            // Define the regex for method calls (e.g., thing:FindFirstChild)
+            const methodPattern = /(\w+):(\w+)\(/g;
 
-            // Replace method names with obfuscated names
-            Object.keys(methodMappings).forEach(method => {
-                const obfuscatedMethod = methodMappings[method];
-                const methodPattern = new RegExp(`:${method}\\(`, "g");
-                code = code.replace(methodPattern, `:${obfuscatedMethod}(`);
+            // Map to store original method names and their obfuscated counterparts
+            const methodMappings = {};
+
+            return code.replace(methodPattern, (match, objectName, methodName) => {
+                if (!methodMappings[methodName]) {
+                    // Generate a random method name if not already mapped
+                    methodMappings[methodName] = "method_" + generateRandomName();
+                }
+                // Replace method name with its obfuscated version
+                return `${objectName}:${methodMappings[methodName]}(`;
             });
-
-            return code;
         }
 
         // Function to convert a service constant to obfuscated code
@@ -130,11 +131,11 @@
             // Step 1: Handle Service Obfuscation
             let obfuscatedCode = obfuscateServices(code);
 
-            // Step 2: Handle Method Name Obfuscation (like :FindFirstChild, :GetService)
-            obfuscatedCode = obfuscateMethodNames(obfuscatedCode);
-
-            // Step 3: Handle String Obfuscation
+            // Step 2: Handle String Obfuscation
             obfuscatedCode = obfuscateStringLiterals(obfuscatedCode);
+
+            // Step 3: Handle Method Obfuscation (i.e., stuff after the ':')
+            obfuscatedCode = obfuscateMethods(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
