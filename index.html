@@ -85,50 +85,63 @@
 
         // Function to convert string literals to ASCII number representation
         function obfuscateStringLiterals(code) {
-            // Regex pattern to match string literals ('single quotes' or "double quotes")
             const stringPattern = /(["'])(.*?)\1/g;
 
             return code.replace(stringPattern, (match, p1, p2) => {
-                // Convert each character in the string (p2) to its ASCII code using string.char()
                 const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
                 return `string.char(${asciiValues})`;
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
-        function obfuscateCode(code) {
-            // Step 1: Handle String Obfuscation
-            let obfuscatedCode = obfuscateStringLiterals(code);
+        // Function to obfuscate function calls (like RenderStepped)
+        function obfuscateFunctionCalls(code) {
+            const functionMappings = {
+                "RenderStepped": "1", // Use number to represent RenderStepped
+                "Heartbeat": "2",      // Example for other functions
+                // Add more mappings as needed
+            };
 
-            // Object to store old variable and function names and their corresponding new names
+            // Create an object to access these functions
+            const accessObject = `local access = { [1] = game:GetService("RunService").RenderStepped, [2] = game:GetService("RunService").Heartbeat }`;
+            code = accessObject + "\n" + code;
+
+            for (const func in functionMappings) {
+                const funcNumber = functionMappings[func];
+                const regexPattern = new RegExp(`\\b${func}\\b`, 'g');
+                code = code.replace(regexPattern, `access[${funcNumber}]`);
+            }
+
+            return code;
+        }
+
+        // Main obfuscation function
+        function obfuscateCode(code) {
+            let obfuscatedCode = obfuscateStringLiterals(code);
             let nameMappings = {};
 
-            // Regex to detect variables that are initialized (not function or service-related)
+            // Obfuscate variables
             const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
-
-            // Step 2: Replace each variable name with a random name
             obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
-                    // Generate a new random name and map it to the old one
                     nameMappings[p1] = generateRandomName();
                 }
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 3: Replace any references to the old variable names elsewhere in the code
+            // Replace variable references
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 4: Replace comments with random words
+            // Replace comments
             const commentPattern = /--.*/g;
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
 
-            // Step 5: Replace function names with random names
+            // Replace function names
             const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
             obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
                 if (!nameMappings[p1]) {
@@ -137,7 +150,7 @@
                 return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 6: Replace loop variables in 'for' loops
+            // Replace loop variables
             const forLoopPattern = /for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+/g;
             obfuscatedCode = obfuscatedCode.replace(forLoopPattern, (match, p1, p2) => {
                 if (!nameMappings[p1]) {
@@ -149,31 +162,24 @@
                 return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
             });
 
-            // Step 7: Replace any references to loop variables elsewhere
+            // Replace loop variable references
             for (const oldName in nameMappings) {
                 const newName = nameMappings[oldName];
                 const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
                 obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
             }
 
-            // Step 8: Add the header text
-            const headerText = `
--- ████████╗ ██████╗ ███╗   ███╗███████╗██████╗  █████╗ ███╗   ██╗██████╗  ██████╗ ███╗   ███╗███████╗██╗  ██╗██╗████████╗
--- ╚══██╔══╝██╔═══██╗████╗ ████║██╔════╝██╔══██╗██╔══██╗████╗  ██║██╔══██╗██╔═══██╗████╗ ████║██╔════╝██║  ██║██║╚══██╔══╝
---    ██║   ██║   ██║██╔████╔██║███████╗██████╔╝███████║██╔██╗ ██║██║  ██║██║   ██║██╔████╔██║███████╗███████║██║   ██║
---    ██║   ██║   ██║██║╚██╔╝██║╚════██║██╔══██╗██╔══██║██║╚██╗██║██║  ██║██║   ██║██║╚██╔╝██║╚════██║██╔══██║██║   ██║
---    ██║   ╚██████╔╝██║ ╚═╝ ██║███████║██║  ██║██║  ██║██║ ╚████║██████╔╝╚██████╔╝██║ ╚═╝ ██║███████║██║  ██║██║   ██║
---    ╚═╝    ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝
-            `;
+            // Obfuscate specific function calls
+            obfuscatedCode = obfuscateFunctionCalls(obfuscatedCode);
 
-            return headerText + obfuscatedCode;
+            return obfuscatedCode;
         }
 
         document.getElementById('obfuscateButton').onclick = function() {
             const inputScript = document.getElementById('inputScript').value;
             const outputScript = obfuscateCode(inputScript);
             document.getElementById('outputScript').value = outputScript;
-        };
+        }
     </script>
 </body>
 </html>
