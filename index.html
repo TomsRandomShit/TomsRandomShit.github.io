@@ -91,35 +91,40 @@
 
             // Replace each detected service call with a call to `game:GetService()`
             return code.replace(servicePattern, (match, p1) => {
-                const obfuscatedService = `game:GetService(${obfuscateStringLiteral(p1)})`;
+                const obfuscatedService = `game:GetService("${p1}")`;
                 return obfuscatedService;
             });
         }
 
         // Function to convert string literals to ASCII number representation
-        function obfuscateStringLiteral(str) {
-            return `string.char(${str.split('').map(char => char.charCodeAt(0)).join(', ')})`;
-        }
+        function obfuscateStringLiterals(code) {
+            // Regex pattern to match string literals ('single quotes' or "double quotes")
+            const stringPattern = /(["'])(.*?)\1/g;
 
-        // Function to convert the part after the colon (:) into obfuscated function names
-        function obfuscateColonFunctions(code) {
-            const colonFunctionPattern = /([a-zA-Z_]\w*)\s*:(\w+)/g;
-
-            return code.replace(colonFunctionPattern, (match, p1, p2) => {
-                // Obfuscate the function name after the colon
-                const obfuscatedFunction = `string.char(${p2.split('').map(char => char.charCodeAt(0)).join(', ')})`;
-                return `${p1}:${obfuscatedFunction}`;
+            return code.replace(stringPattern, (match, p1, p2) => {
+                // Convert each character in the string (p2) to its ASCII code using string.char()
+                const asciiValues = p2.split('').map(char => char.charCodeAt(0)).join(', ');
+                return `string.char(${asciiValues})`;
             });
         }
 
-        // Function to obfuscate the `.` notation (e.g., game.Players.LocalPlayer) using `string.sub`
-        function obfuscateDotNotation(code) {
-            const dotPattern = /game\.(\w+)\.(\w+)/g;
+        // Function to handle the obfuscation of method calls like :FindFirstChild and :GetService
+        function obfuscateMethodCalls(code) {
+            const methodPattern = /([a-zA-Z_]\w*)\s*:(FindFirstChild|GetService|Clone|Destroy|WaitForChild)\s*\((.*?)\)/g;
+            return code.replace(methodPattern, (match, objName, method, args) => {
+                // Obfuscate the method name (FindFirstChild, GetService, etc.)
+                const obfuscatedMethod = method.split('').map(c => `string.char(${c.charCodeAt(0)})`).join(', ');
 
-            return code.replace(dotPattern, (match, p1, p2) => {
-                const obfuscatedService = `string.sub(${obfuscateStringLiteral(p1)}, 1, ${p1.length})`;
-                const obfuscatedProperty = `string.sub(${obfuscateStringLiteral(p2)}, 1, ${p2.length})`;
-                return `${obfuscatedService}.${obfuscatedProperty}`;
+                // Obfuscate the arguments within the parentheses
+                let obfuscatedArgs = args.split(',').map(arg => {
+                    arg = arg.trim();
+                    if (arg.startsWith('"') || arg.startsWith("'")) {
+                        return `string.char(${arg.slice(1, -1).split('').map(c => c.charCodeAt(0)).join(', ')})`; // string arguments
+                    }
+                    return arg; // variables are left unchanged
+                }).join(', ');
+
+                return `${objName}:string.char(${obfuscatedMethod})(${obfuscatedArgs})`;
             });
         }
 
@@ -128,23 +133,67 @@
             // Step 1: Handle Service Obfuscation
             let obfuscatedCode = obfuscateServices(code);
 
-            // Step 2: Handle Colon Function Obfuscation (e.g., thing:FindFirstChild())
-            obfuscatedCode = obfuscateColonFunctions(obfuscatedCode);
+            // Step 2: Handle Method Calls Obfuscation
+            obfuscatedCode = obfuscateMethodCalls(obfuscatedCode);
 
-            // Step 3: Handle Dot Notation Obfuscation (e.g., game.Players.LocalPlayer)
-            obfuscatedCode = obfuscateDotNotation(obfuscatedCode);
+            // Step 3: Handle String Obfuscation
+            obfuscatedCode = obfuscateStringLiterals(obfuscatedCode);
 
-            // Step 4: Handle String Literals Obfuscation
-            const stringPattern = /(["'])(.*?)\1/g;
-            obfuscatedCode = obfuscatedCode.replace(stringPattern, (match, p1, p2) => {
-                return `string.char(${p2.split('').map(char => char.charCodeAt(0)).join(', ')})`;
+            // Object to store old variable and function names and their corresponding new names
+            let nameMappings = {};
+
+            // Regex to detect variables that are initialized (not function or service-related)
+            const variablePattern = /local\s+([a-zA-Z_]\w*)\s*=\s*(\S+)/g;
+
+            // Step 4: Replace each variable name with a random name
+            obfuscatedCode = obfuscatedCode.replace(variablePattern, (match, p1, p2) => {
+                if (!nameMappings[p1]) {
+                    // Generate a new random name and map it to the old one
+                    nameMappings[p1] = generateRandomName();
+                }
+                return match.replace(p1, nameMappings[p1]);
             });
 
-            // Step 5: Replace comments with random words
+            // Step 5: Replace any references to the old variable names elsewhere in the code
+            for (const oldName in nameMappings) {
+                const newName = nameMappings[oldName];
+                const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
+                obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
+            }
+
+            // Step 6: Replace comments with random words
             const commentPattern = /--.*/g;
             obfuscatedCode = obfuscatedCode.replace(commentPattern, () => {
                 return "-- " + generateRandomWords();
             });
+
+            // Step 7: Replace function names with random names
+            const functionPattern = /(?:local\s+)?function\s+([a-zA-Z_]\w*)\s*\(/g;
+            obfuscatedCode = obfuscatedCode.replace(functionPattern, (match, p1) => {
+                if (!nameMappings[p1]) {
+                    nameMappings[p1] = generateRandomName();
+                }
+                return match.replace(p1, nameMappings[p1]);
+            });
+
+            // Step 8: Replace loop variables in 'for' loops
+            const forLoopPattern = /for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+/g;
+            obfuscatedCode = obfuscatedCode.replace(forLoopPattern, (match, p1, p2) => {
+                if (!nameMappings[p1]) {
+                    nameMappings[p1] = generateRandomName();
+                }
+                if (!nameMappings[p2]) {
+                    nameMappings[p2] = generateRandomName();
+                }
+                return match.replace(p1, nameMappings[p1]).replace(p2, nameMappings[p2]);
+            });
+
+            // Step 9: Replace any references to loop variables elsewhere
+            for (const oldName in nameMappings) {
+                const newName = nameMappings[oldName];
+                const referencePattern = new RegExp(`\\b${oldName}\\b`, 'g');
+                obfuscatedCode = obfuscatedCode.replace(referencePattern, newName);
+            }
 
             return obfuscatedCode;
         }
