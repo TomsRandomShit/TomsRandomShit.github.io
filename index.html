@@ -107,27 +107,28 @@
             });
         }
 
-        // Function to obfuscate method calls (e.g., fgnqijxh:GetMouse())
+        // Function to convert method calls into string.char() obfuscation
         function obfuscateMethodCalls(code) {
-            const methodPattern = /([a-zA-Z_][\w]*)\s*[:.]\s*([a-zA-Z_][\w]*)\(/g;
+            // Regex to find method calls like `GetMouse()`, `WaitForChild()`, etc.
+            const methodPattern = /(\w+):(\w+)\(\)/g;
 
-            return code.replace(methodPattern, (match, object, method) => {
-                // Convert the method name to string.char() representation
-                const methodObfuscated = method.split('').map(char => char.charCodeAt(0)).join(', ');
-                return `${object}[string.char(${methodObfuscated})]()`; // Using string.char() for method names
+            return code.replace(methodPattern, (match, objName, methodName) => {
+                // Convert the method name to ASCII numbers using string.char
+                const asciiValues = methodName.split('').map(char => char.charCodeAt(0)).join(', ');
+                return `${objName}:string.char(${asciiValues})()`;
             });
         }
 
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, comments, and methods
         function obfuscateCode(code) {
             // Step 1: Handle Service Obfuscation
             let obfuscatedCode = obfuscateServices(code);
 
-            // Step 2: Handle Method Call Obfuscation
-            obfuscatedCode = obfuscateMethodCalls(obfuscatedCode);
-
-            // Step 3: Handle String Obfuscation
+            // Step 2: Handle String Obfuscation
             obfuscatedCode = obfuscateStringLiterals(obfuscatedCode);
+
+            // Step 3: Handle Method Call Obfuscation (e.g., GetMouse, WaitForChild)
+            obfuscatedCode = obfuscateMethodCalls(obfuscatedCode);
 
             // Object to store old variable and function names and their corresponding new names
             let nameMappings = {};
