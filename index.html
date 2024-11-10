@@ -84,15 +84,23 @@
             return randomComment.trim();
         }
 
-        // Function to convert a service constant to obfuscated code
-        function obfuscateServices(code) {
-            // Regex to detect specific Roblox services
-            const servicePattern = /game\.(Players|Workspace|Teams|Lighting|ReplicatedStorage|ServerStorage|StarterGui|StarterPlayer)\b/g;
+        // Function to obfuscate method calls (after ':')
+        function obfuscateMethodCalls(code) {
+            const methodPattern = /(\w+):([a-zA-Z_]\w*)/g;
 
-            // Replace each detected service call with a call to `game:GetService()`
-            return code.replace(servicePattern, (match, p1) => {
-                const obfuscatedService = `game:GetService("${p1}")`;
-                return obfuscatedService;
+            return code.replace(methodPattern, (match, objName, methodName) => {
+                const obfuscatedMethod = generateRandomName();
+                return `${objName}:${obfuscatedMethod}`;
+            });
+        }
+
+        // Function to obfuscate properties accessed via '.' (e.g., game.Players.LocalPlayer)
+        function obfuscatePropertyAccess(code) {
+            const propertyPattern = /(\w+)\.([a-zA-Z_]\w*)/g;
+
+            return code.replace(propertyPattern, (match, objName, propName) => {
+                const obfuscatedProp = generateRandomName();
+                return `${objName}.${obfuscatedProp}`;
             });
         }
 
@@ -108,23 +116,13 @@
             });
         }
 
-        // Function to obfuscate the method calls like `thing:FindFirstChild` or `thing:GetService`
-        function obfuscateMethodCalls(code) {
-            const methodPattern = /([a-zA-Z_]\w*)\s*[:]\s*([a-zA-Z_]\w*)/g;
-
-            return code.replace(methodPattern, (match, object, method) => {
-                const obfuscatedMethod = method.split('').map(char => char.charCodeAt(0)).join(', ');
-                return `${object}[string.char(${obfuscatedMethod})]`;
-            });
-        }
-
-        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, comments, and method calls
+        // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
-            // Step 1: Handle Service Obfuscation
-            let obfuscatedCode = obfuscateServices(code);
+            // Step 1: Handle Method Call Obfuscation
+            let obfuscatedCode = obfuscateMethodCalls(code);
 
-            // Step 2: Handle Method Obfuscation
-            obfuscatedCode = obfuscateMethodCalls(obfuscatedCode);
+            // Step 2: Handle Property Access Obfuscation
+            obfuscatedCode = obfuscatePropertyAccess(obfuscatedCode);
 
             // Step 3: Handle String Obfuscation
             obfuscatedCode = obfuscateStringLiterals(obfuscatedCode);
