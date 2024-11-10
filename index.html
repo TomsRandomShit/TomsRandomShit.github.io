@@ -84,20 +84,15 @@
             return randomComment.trim();
         }
 
-        // Convert a string to ASCII sequence for function calls and API calls
-        function obfuscateMethodName(methodName) {
-            return methodName.split('').map(char => "\\" + char.charCodeAt(0)).join('');
-        }
+        // Function to convert a service constant to obfuscated code
+        function obfuscateServices(code) {
+            // Regex to detect specific Roblox services
+            const servicePattern = /game\.(Players|Workspace|Teams|Lighting|ReplicatedStorage|ServerStorage|StarterGui|StarterPlayer)\b/g;
 
-        // Function to convert specific LuaU method calls to ASCII sequences
-        function obfuscateApiCalls(code) {
-            // Regex to match methods like thing:MethodName or thing:GetService("ServiceName")
-            const methodPattern = /\b(\w+):([a-zA-Z_]\w*)\b/g;
-
-            return code.replace(methodPattern, (match, p1, p2) => {
-                // Replace the method name with an obfuscated ASCII sequence
-                const obfuscatedMethod = obfuscateMethodName(p2);
-                return `${p1}:${obfuscatedMethod}`;
+            // Replace each detected service call with a call to `game:GetService()`
+            return code.replace(servicePattern, (match, p1) => {
+                const obfuscatedService = `game:GetService("${p1}")`;
+                return obfuscatedService;
             });
         }
 
@@ -115,8 +110,8 @@
 
         // Function to obfuscate LuaU code by renaming variables, functions, loops, strings, and comments
         function obfuscateCode(code) {
-            // Step 1: Handle Service Obfuscation and Method Calls
-            let obfuscatedCode = obfuscateApiCalls(code);
+            // Step 1: Handle Service Obfuscation
+            let obfuscatedCode = obfuscateServices(code);
 
             // Step 2: Handle String Obfuscation
             obfuscatedCode = obfuscateStringLiterals(obfuscatedCode);
